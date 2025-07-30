@@ -1,6 +1,7 @@
 require("dotenv").config()
 const express = require("express")
 const cors = require("cors")
+const cookieParser = require("cookie-parser")
 const { sql } = require("./db") // Importa o cliente Neon
 
 const authRoutes = require("./routes/authRoutes")
@@ -10,12 +11,21 @@ const expenseRoutes = require("./routes/expenseRoutes")
 const projectRoutes = require("./routes/projectRoutes")
 const walletRoutes = require("./routes/walletRoutes")
 
+const requiredEnv = ["DATABASE_URL", "JWT_SECRET", "JWT_EXPIRES_IN"]
+requiredEnv.forEach((key) => {
+  if (!process.env[key]) {
+    console.error(`Missing required environment variable: ${key}`)
+    process.exit(1)
+  }
+})
+
 const app = express()
 const PORT = process.env.PORT || 3001
 
 // Middleware
-app.use(cors())
+app.use(cors({ origin: process.env.CORS_ORIGIN || true, credentials: true }))
 app.use(express.json())
+app.use(cookieParser())
 
 // Torna o cliente SQL acessível para as rotas
 app.use((req, res, next) => {
@@ -49,6 +59,10 @@ app.use((err, req, res, next) => {
   res.status(500).send("Algo deu errado!")
 })
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`)
-})
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`)
+  })
+}
+
+module.exports = app

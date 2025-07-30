@@ -28,3 +28,21 @@ Continue building your app on:
 2. Deploy your chats from the v0 interface
 3. Changes are automatically pushed to this repository
 4. Vercel deploys the latest version from this repository
+
+## Local Development
+
+1. Install dependencies with `pnpm install`.
+2. Copy `.env.example` to `.env` and fill in the values below.
+
+   ```
+   DATABASE_URL=postgres://neondb_owner:npg_A0xHBt4NIUCq@ep-falling-glade-adoqeyb5-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require
+   JWT_SECRET=TxFEUjXbqEfbaawTVmdE
+   JWT_EXPIRES_IN=1d
+   CORS_ORIGIN=http://localhost:3000
+   NEXT_PUBLIC_API_URL=http://localhost:3001/api
+   ```
+
+3. Start the API server with `node src/server.js`.
+4. In another terminal run `pnpm dev` to start the Next.js app.
+5. Login requests set an HTTP-only `token` cookie used for authentication.
+6. Run tests with `pnpm test` (Vitest).

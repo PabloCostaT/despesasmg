@@ -2,7 +2,7 @@
 
 import { Skeleton } from "@/components/ui/skeleton"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useFormik } from "formik"
 import * as Yup from "yup"
@@ -130,25 +130,7 @@ export default function AddExpensePage() {
           const defaultFamilyId = familiesRes.data[0].id
           formik.setFieldValue("familyId", defaultFamilyId)
 
-          const membersRes = await api.get(`/families/${defaultFamilyId}/members`)
-          setFamilyMembers(membersRes.data.filter((m: FamilyMember) => m.status === "active"))
-
-          const projectsRes = await api.get(`/projects/${defaultFamilyId}`)
-          setProjects(projectsRes.data)
-
-          // Set default paidByMemberId to current user's memberId if available
-          const currentUserMember = membersRes.data.find((m: FamilyMember) => m.user_id === user?.id)
-          if (currentUserMember) {
-            formik.setFieldValue("paidByMemberId", currentUserMember.id)
-          }
-
-          // Initialize splitDetails with all active members for 'equal' split
-          formik.setFieldValue(
-            "splitDetails",
-            membersRes.data
-              .filter((m: FamilyMember) => m.status === "active")
-              .map((m: FamilyMember) => ({ memberId: m.id })),
-          )
+          await loadFamilyData(defaultFamilyId)
         }
       } catch (error) {
         console.error("Erro ao carregar dados para o formulário:", error)
@@ -158,7 +140,34 @@ export default function AddExpensePage() {
       }
     }
     fetchData()
-  }, [user?.id])
+  }, [user?.id, loadFamilyData])
+
+  const loadFamilyData = useCallback(
+    async (familyId: string) => {
+      try {
+        const membersRes = await api.get(`/families/${familyId}/members`)
+        setFamilyMembers(membersRes.data.filter((m: FamilyMember) => m.status === "active"))
+        const projectsRes = await api.get(`/projects/${familyId}`)
+        setProjects(projectsRes.data)
+
+        const currentUserMember = membersRes.data.find((m: FamilyMember) => m.user_id === user?.id)
+        if (currentUserMember) {
+          formik.setFieldValue("paidByMemberId", currentUserMember.id)
+        }
+
+        formik.setFieldValue(
+          "splitDetails",
+          membersRes.data
+            .filter((m: FamilyMember) => m.status === "active")
+            .map((m: FamilyMember) => ({ memberId: m.id })),
+        )
+      } catch (error) {
+        console.error("Erro ao carregar dados da família:", error)
+        toast.error("Erro ao carregar dados da família")
+      }
+    },
+    [user?.id],
+  )
 
   useEffect(() => {
     // Recalculate split details when amount or split type changes
@@ -218,7 +227,7 @@ export default function AddExpensePage() {
               <Select
                 onValueChange={(value) => {
                   formik.setFieldValue("familyId", value)
-                  // TODO: Recarregar membros e projetos para a nova família selecionada
+                  loadFamilyData(value)
                 }}
                 value={formik.values.familyId}
               >
