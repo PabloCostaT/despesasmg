@@ -53,7 +53,7 @@ export default function LoginPage() {
             email: values.email,
             password: values.password,
           })
-          login(response.data.token, response.data.user)
+          login(response.data.user)
           toast.success("Login realizado com sucesso!")
         }
       } catch (error: any) {

@@ -2,10 +2,10 @@ const jwt = require("jsonwebtoken")
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"]
-  const token = authHeader && authHeader.split(" ")[1]
+  const token = (authHeader && authHeader.split(" ")[1]) || req.cookies.token
 
   if (!token) {
-    return res.status(401).json({ message: "Acesso Negado: Nenhum token fornecido" })
+    return res.status(401).json({ message: "Acesso Negado: Token não encontrado" })
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {

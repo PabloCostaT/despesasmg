@@ -55,11 +55,24 @@ router.post("/login", async (req, res) => {
       expiresIn: process.env.JWT_EXPIRES_IN,
     })
 
-    res.status(200).json({ token, user: { id: user.id, name: user.name, email: user.email } })
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000,
+    })
+
+    res.status(200).json({ user: { id: user.id, name: user.name, email: user.email } })
   } catch (error) {
     console.error("Erro ao fazer login do usuário:", error)
     res.status(500).json({ message: "Erro do servidor durante o login" })
   }
+})
+
+// Logout user
+router.post("/logout", (req, res) => {
+  res.clearCookie("token")
+  res.status(200).json({ message: "Logout realizado" })
 })
 
 // TODO: Implement password recovery (e.g., send email with reset link)
